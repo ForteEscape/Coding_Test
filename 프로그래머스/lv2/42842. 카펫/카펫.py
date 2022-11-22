@@ -9,8 +9,11 @@ def solution(brown, yellow):
             yellow_size_width.append(yellow // i)
     
     for i in range(len(yellow_size_height)):
-        if (yellow_size_width[i] + 2) * 2 + yellow_size_height[i] * 2 == brown:
-            answer.append(yellow_size_width[i] + 2)
-            answer.append(yellow_size_height[i] + 2)
+        brown_width = yellow_size_width[i] + 2
+        brown_height = yellow_size_height[i]
+        
+        if (brown_width * 2) + (brown_height * 2) == brown:
+            answer.append(brown_width)
+            answer.append(brown_height + 2)
     
     return answer
