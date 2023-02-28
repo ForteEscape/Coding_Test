@@ -1,9 +1,14 @@
 class Solution {
     public long solution(long n) {
-        if(Math.sqrt(n) % 1 == 0){
-            return (long)((Math.sqrt(n)) + 1) * (long)((Math.sqrt(n)) + 1);
-        } else{
-            return -1;
+        long nn = n / 2;
+        long count;
+
+        for (count = 1; nn >= 0; count++){
+            nn = nn - count;
         }
+
+        long answer = (count - 1) * (count - 1) == n ? count * count : -1;
+
+        return answer;
     }
 }
