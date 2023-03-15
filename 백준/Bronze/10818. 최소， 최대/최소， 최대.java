@@ -3,7 +3,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.*;
 
-public class Main {
+public class Main{
     public static void main(String[] args) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         StringTokenizer st = new StringTokenizer(br.readLine());
@@ -18,7 +18,14 @@ public class Main {
             data[idx++] = Integer.parseInt(st.nextToken());
         }
 
-        Arrays.sort(data);
-        System.out.println(data[0] + " " + data[N - 1]);
+        int max = data[0];
+        int min = data[0];
+
+        for(int element: data){
+            max = Math.max(max, element);
+            min = Math.min(min, element);
+        }
+        
+        System.out.println(min + " " + max);
     }
 }
