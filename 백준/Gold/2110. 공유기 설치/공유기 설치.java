@@ -27,7 +27,8 @@ public class Main {
         while(front < end){
             int mid = (front + end) / 2;
 
-            if(canInstall(mid) < M){
+            // 설치한 공유기 개수가 있는 공유기 개수보다 적다면 더 적은 반경으로 해도 된다.
+            if (getInstallCnt(mid) < M){
                 end = mid;
             } else{
                 front = mid + 1;
@@ -37,19 +38,20 @@ public class Main {
         System.out.println(front - 1);
     }
 
-    static int canInstall(int distance){
-        int count = 1;
-        int lastLocation = house[0];
+    // 해당 와이파이 범위만큼 조정한 상태에서 설치를 한다면 몇 개를 설치할 수 있는가를 구하는 메서드
+    static int getInstallCnt(int dist){
+        int cnt = 1;
+        int prevInstallLocation = house[0];
 
-        for(int i = 1; i < house.length; i++){
+        for (int i = 1; i < house.length; i++){
             int location = house[i];
 
-            if (location - lastLocation >= distance){
-                count++;
-                lastLocation = location;
+            if (location - prevInstallLocation >= dist){
+                cnt++;
+                prevInstallLocation = house[i];
             }
         }
 
-        return count;
+        return cnt;
     }
 }
