@@ -10,41 +10,47 @@ public class Main {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 
         int N = Integer.parseInt(br.readLine());
-        LinkedList<Integer> data = new LinkedList<>();
+        int[] data = new int[N];
         ans = 0;
 
         StringTokenizer st = new StringTokenizer(br.readLine());
 
         for (int i = 0; i < N; i++){
-            data.addLast(Integer.parseInt(st.nextToken()));
+            data[i] = Integer.parseInt(st.nextToken());
         }
 
-        Collections.sort(data);
+        Arrays.sort(data);
 
         for (int i = 0; i < N; i++){
-            LinkedList<Integer> dataSet = new LinkedList<>(data);
-            int key = dataSet.get(i);
-            dataSet.remove(i);
+            int key = data[i];
 
-            if(solve(dataSet, key)) ans++;
+            if(solve(data, key, i)) ans++;
         }
 
         System.out.println(ans);
     }
 
-    public static boolean solve(LinkedList<Integer> dataSet, int key){
+    public static boolean solve(int[] dataSet, int key, int keyIdx){
         int start = 0;
-        int end = dataSet.size() - 1;
+        int end = dataSet.length - 1;
 
         while(start < end){
-            int sum = dataSet.get(start) + dataSet.get(end);
+            int sum = dataSet[start] + dataSet[end];
 
-            if (sum >= key){
-                if (sum == key){
-                    return true;
-                }
+            if (start == keyIdx){
+                start++;
+                continue;
+            }
 
+            if (end == keyIdx){
                 end--;
+                continue;
+            }
+
+            if (sum > key){
+                end--;
+            } else if (sum == key){
+                return true;
             } else{
                 start++;
             }
