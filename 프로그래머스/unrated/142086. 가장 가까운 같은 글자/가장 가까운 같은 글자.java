@@ -1,23 +1,17 @@
+import java.util.*;
+
 class Solution {
     public int[] solution(String s) {
-        int[] alphabet = new int[26];
-        int len = s.length();
-        int[] answer = new int[len];
+        HashMap<Character, Integer> charDist = new HashMap<>();
+        int[] answer = new int[s.length()];
         
-        for(int i = 0; i < len; i++){
-            int idx = s.charAt(i) - 97;
-            
-            if(alphabet[idx] == 0){
-                answer[i] = -1;
-                alphabet[idx]++;
+        for(int i = 0; i < s.length(); i++){
+            if(charDist.containsKey(s.charAt(i))){
+                answer[i] = i - charDist.get(s.charAt(i));
             } else{
-                for(int j = i - 1; j >= 0; j--){
-                    if (s.charAt(i) == s.charAt(j)){
-                        answer[i] = i - j;
-                        break;
-                    }
-                }
+                answer[i] = -1;
             }
+            charDist.put(s.charAt(i), i);
         }
         
         return answer;
