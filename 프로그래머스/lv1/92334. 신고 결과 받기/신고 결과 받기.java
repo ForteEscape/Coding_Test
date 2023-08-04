@@ -3,41 +3,40 @@ import java.util.*;
 class Solution {
     public int[] solution(String[] id_list, String[] report, int k) {
         int[] answer = new int[id_list.length];
-        
-        Map<String, Integer> reportedCount = new HashMap<>();
-        Map<String, List<String>> reportMap = new HashMap<>();
+
+        Map<String, Set<String>> map = new HashMap<>();
+        Map<String, Integer> reportMap = new HashMap<>();
         Map<String, Integer> indexMap = new HashMap<>();
-        
+        Set<String> blockedUser = new HashSet<>();
+
         for(int i = 0; i < id_list.length; i++){
-            reportedCount.put(id_list[i], 0);
-            reportMap.put(id_list[i], new ArrayList<>());
             indexMap.put(id_list[i], i);
+            map.put(id_list[i], new HashSet<>());
         }
-        
-        Set<String> reportSet = new HashSet<>();        
+
         for(String element: report){
-            reportSet.add(element);
-        }
-        
-        for(String element: reportSet){
             StringTokenizer st = new StringTokenizer(element);
-            String reportUser = st.nextToken();
+            String user = st.nextToken();
             String reportedUser = st.nextToken();
-            
-            reportMap.get(reportUser).add(reportedUser);
-            reportedCount.put(reportedUser, reportedCount.get(reportedUser) + 1);
+
+            if(!map.get(user).contains(reportedUser)){
+                map.get(user).add(reportedUser);
+                reportMap.put(reportedUser, reportMap.getOrDefault(reportedUser, 0) + 1);
+            }
+
+            if(reportMap.get(reportedUser) >= k){
+                blockedUser.add(reportedUser);
+            }
         }
-        
-        for(String id: id_list){
-            if(reportedCount.get(id) >= k){
-                for(String key: reportMap.keySet()){
-                    if(reportMap.get(key).contains(id)){
-                        answer[indexMap.get(key)]++;
-                    }
+
+        for(String blockUser: blockedUser){
+            for(String id: id_list){
+                if(map.get(id).contains(blockUser)){
+                    answer[indexMap.get(id)]++;
                 }
             }
         }
-        
+
         return answer;
     }
 }
