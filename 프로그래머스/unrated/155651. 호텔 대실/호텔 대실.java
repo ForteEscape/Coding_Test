@@ -17,7 +17,6 @@ class Solution {
         }
         
         Arrays.sort(time, (x, y) -> (x[0] - y[0]));
-        
         PriorityQueue<int[]> pq = new PriorityQueue<>((x, y) -> (x[1] - y[1]));
         
         for(int i = 0; i < time.length; i++){
@@ -35,10 +34,8 @@ class Solution {
                     pq.offer(time[i]);
                 }
             }
-            
-            answer = Math.max(answer, pq.size());
         }
         
-        return answer;
+        return pq.size();
     }
 }
