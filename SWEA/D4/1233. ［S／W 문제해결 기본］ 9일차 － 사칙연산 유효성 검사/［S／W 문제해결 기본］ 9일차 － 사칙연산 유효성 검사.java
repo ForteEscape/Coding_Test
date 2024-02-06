@@ -1,8 +1,6 @@
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.util.ArrayDeque;
 import java.util.Arrays;
-import java.util.Deque;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -30,7 +28,7 @@ public class Solution {
 			for(int i = 1; i <= N; i++) {
 				st = new StringTokenizer(br.readLine());
 				
-				String num = st.nextToken();
+				st.nextToken();
 				String code = st.nextToken();
 				tree[i] = code;
 			}
@@ -58,26 +56,22 @@ public class Solution {
 			if(operation.contains(tree[startNode])) {
 				flag = false;
 				return;
-			} else {
-				first = tree[startNode];
 			}
 		} else {
 			if(operation.contains(tree[startNode])) { // 부호라면
 				if(operation.contains(first)) {
 					flag = false;
 					return;
-				} else {
-					first = tree[startNode];
 				}
 			} else {
-				if(operation.contains(first)) {
-					first = tree[startNode];
-				} else {
+				if(!operation.contains(first)) {
 					flag = false;
 					return;
 				}
 			}
 		}
+		
+		first = tree[startNode];
 		
 		if(!flag) { 
 			return;
