@@ -1,64 +1,78 @@
+import java.awt.Point;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayDeque;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
-import java.util.Deque;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.PriorityQueue;
+import java.util.Queue;
+import java.util.Stack;
 import java.util.StringTokenizer;
-//8 directions
+
+/**
+ * 
+ */
+
 public class Main {
-	
-	static int[] indegree;
-	static List<Integer>[] graph;
-	static int V, E;
-	
-	public static void main(String[] args) throws IOException {
-		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-		StringTokenizer st = new StringTokenizer(br.readLine());
+	static BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+    static BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(System.out));
+    static StringTokenizer st;
+    
+    static int N, M;
+    static int[] in;
+    static ArrayList<Integer> G[];
+    static Queue<Integer> q = new LinkedList<>();
+
+	public static void main(String[] args) throws Exception {
 		
-		V = Integer.parseInt(st.nextToken());
-		E = Integer.parseInt(st.nextToken());
+		st = new StringTokenizer(br.readLine(), " ");
+		N = Integer.parseInt(st.nextToken());
+		M = Integer.parseInt(st.nextToken());
 		
-		graph = new List[V + 1];
-		indegree = new int[V + 1];
-		for(int i = 1; i <= V; i++) {
-			graph[i] = new ArrayList<>();
+		in = new int[N+1];
+		G = new ArrayList[N+1];
+		for(int i=0;i<=N;i++) {
+			G[i] = new ArrayList<Integer>();
 		}
 		
-		for(int i = 0; i< E; i++) {
-			st = new StringTokenizer(br.readLine());
+		for(int i=0;i<M;i++) {
+			st = new StringTokenizer(br.readLine(), " ");
+			int a = Integer.parseInt(st.nextToken());
+			int b = Integer.parseInt(st.nextToken());
 			
-			int from = Integer.parseInt(st.nextToken());
-			int to = Integer.parseInt(st.nextToken());
-			
-			graph[from].add(to);
-			indegree[to]++;
+			G[a].add(b);
+			in[b]++;
 		}
 		
-		Deque<Integer> queue = new ArrayDeque<>();
-		StringBuilder sb = new StringBuilder();
-		 
-		for(int i = 1; i <= V; i++) {
-			if(indegree[i] == 0) {
-				sb.append(i).append(" ");
-				queue.addLast(i);
+		for(int i=1;i<=N;i++) {
+			if(in[i] == 0) {
+				q.offer(i);
 			}
 		}
 		
-		while(!queue.isEmpty()) {
-			int cur = queue.pollFirst();
-			
-			for(int adjNode : graph[cur]) {
-				indegree[adjNode]--;
+		while(!q.isEmpty()) {
+			int nowNode = q.poll();
+			bw.write(nowNode+" ");
+			for(int i=0;i<G[nowNode].size();i++) {
+				int nextNode = G[nowNode].get(i);
 				
-				if(indegree[adjNode] == 0) {
-					sb.append(adjNode).append(" ");
-					queue.addLast(adjNode);
+				in[nextNode]--;
+				
+				if(in[nextNode] == 0) {
+					q.add(nextNode);
 				}
 			}
 		}
 		
-		System.out.println(sb.toString());
-	}
+		bw.write("\n");
+		bw.close();
+	}	
+
 }
