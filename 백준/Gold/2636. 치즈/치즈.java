@@ -65,32 +65,7 @@ public class Main {
     	if(x>=0 && x<N && y>=0 && y<M) return true;
     	return false;
     }
-    
-    public static void bfs() {
-    	
-    	int beforeLevel = 0;
-    	
-    	while(!q.isEmpty()) {
-    		Info nowInfo = q.poll();
-    		if(beforeLevel != nowInfo.level) {
-    			cnt = q.size()+1;
-    			hour = nowInfo.level;
-    			printVisit();
-    		}
-    		
-    		for(int i=0;i<4;i++) {
-    			int nx = nowInfo.x+dx[i];
-        		int ny = nowInfo.y+dy[i];
-        		
-    			if(isInside(nx, ny) && !visit[nx][ny] && map[nx][ny] == 1) {
-    				visit[nx][ny] = true;
-        			q.offer(new Info(nx,ny,nowInfo.level+1));
-        		}
-    		}
-    		beforeLevel = nowInfo.level;
-    	}
-    	
-    }
+
     
     public static void dfs(int x, int y) {
     	visit[x][y] = true;
@@ -113,10 +88,6 @@ public class Main {
     		}
     		
     	}
-    }
-    
-    public static void findOutsideCheeses() {
-    	dfs(0,0);
     }
     
     public static void changeCheeseStatus() {
@@ -160,10 +131,7 @@ public class Main {
 			changeCheeseStatus();
 			//printMap();
 			//System.out.println("cnt: "+cnt+" hour: "+hour);
-		}
-		
-		//findOutsideCheeses();
-		//bfs();			
+		}	
 		
 		bw.write(hour+"\n"+cnt);
 		bw.close();
