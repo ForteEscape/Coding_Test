@@ -1,96 +1,188 @@
-import java.io.*;
-import java.util.*;
+import java.awt.Point;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.PriorityQueue;
+import java.util.Queue;
+import java.util.Stack;
+import java.util.StringTokenizer;
+
+/**
+ * 마지막에 남은 치즈 부분 개수와 치즈가 없어지는데 걸리는 시간 구하기
+ * queue에 {좌표 정보, 현재 레벨} 넣기
+ * 현재 레벨이 달라졌을 때의 queue size가 현재 시점의 치즈 개수  
+ */
 
 public class Main {
-	
-	static class Location {
-		int y;
-		int x;
+	static BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+    static BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(System.out));
+    static StringTokenizer st;
+    
+    static int N, M;
+    static int[][] map;
+    static int[] dx = {0,0,1,-1};
+    static int[] dy = {1,-1,0,0};
+    static boolean[][] visit;    
+    static Queue<Info> q = new LinkedList<>();
+    static int hour, cnt;
+    static boolean flag;
+    
+    public static void printVisit() {
+    	for(int i=0;i<N;i++) {
+    		for(int j=0;j<M;j++) {
+    			if(visit[i][j]) {
+    				System.out.print(1+ " ");
+    			}
+    			else {
+    				System.out.print(0+ " ");
+    			}
+    		}
+    		System.out.println();
+    	}
+    	System.out.println();
+    }
+    
+    public static void printMap() {
+    	for(int i=0;i<N;i++) {
+    		for(int j=0;j<M;j++) {
+    			System.out.print(map[i][j]+" ");
+    		}
+    		System.out.println();
+    	}
+    	System.out.println();
+    }
+    
+    public static boolean isInside(int x, int y) {
+    	if(x>=0 && x<N && y>=0 && y<M) return true;
+    	return false;
+    }
+    
+    public static void bfs() {
+    	
+    	int beforeLevel = 0;
+    	
+    	while(!q.isEmpty()) {
+    		Info nowInfo = q.poll();
+    		if(beforeLevel != nowInfo.level) {
+    			cnt = q.size()+1;
+    			hour = nowInfo.level;
+    			printVisit();
+    		}
+    		
+    		for(int i=0;i<4;i++) {
+    			int nx = nowInfo.x+dx[i];
+        		int ny = nowInfo.y+dy[i];
+        		
+    			if(isInside(nx, ny) && !visit[nx][ny] && map[nx][ny] == 1) {
+    				visit[nx][ny] = true;
+        			q.offer(new Info(nx,ny,nowInfo.level+1));
+        		}
+    		}
+    		beforeLevel = nowInfo.level;
+    	}
+    	
+    }
+    
+    public static void dfs(int x, int y) {
+    	visit[x][y] = true;
+    	
+    	for(int i=0;i<4;i++) {
+    		int nx = x+dx[i];
+    		int ny = y+dy[i];
+    		
+    		if(isInside(nx, ny)) {
+    			if(!visit[nx][ny] && map[nx][ny] == 0) {
+        			dfs(nx,ny);
+        		}
+        		else {
+        			if(!visit[nx][ny]) {
+        				q.offer(new Info(nx,ny,1));
+        				flag = false;
+        				visit[nx][ny] = true;
+        			}        			
+        		}
+    		}
+    		
+    	}
+    }
+    
+    public static void findOutsideCheeses() {
+    	dfs(0,0);
+    }
+    
+    public static void changeCheeseStatus() {
+    	while(!q.isEmpty()) {
+    		map[q.peek().x][q.peek().y] = 0;
+    		q.poll();
+    	}
+    }
+    
+	public static void main(String[] args) throws Exception {
 		
-		Location(int y, int x) {
-			this.y = y;
-			this.x = x;
-		}
-	}
-	
-	static int N, M;
-	static int[] dy = {-1, 0, 1, 0};
-	static int[] dx = {0, 1, 0, -1};
-	static int[][] board;
-	static boolean[][] visited;
-	static List<Location> meltCheeseList;
-	
-	public static void main(String[] args) throws IOException {
-		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-		StringTokenizer st = new StringTokenizer(br.readLine());
-		
+		st = new StringTokenizer(br.readLine(), " ");
 		N = Integer.parseInt(st.nextToken());
 		M = Integer.parseInt(st.nextToken());
 		
-		board = new int[N][M];
-		for(int i = 0; i < N; i++) {
-			st = new StringTokenizer(br.readLine());
-			for(int j = 0; j < M; j++) {
-				board[i][j] = Integer.parseInt(st.nextToken());
+		map = new int[N][M];
+		visit = new boolean[N][M];
+		
+		for(int i=0;i<N;i++) {
+			st = new StringTokenizer(br.readLine(), " ");
+			for(int j=0;j<M;j++) {
+				map[i][j] = Integer.parseInt(st.nextToken());
 			}
 		}
 		
-		int time = 0;
-		int remainSize = -1;
 		while(true) {
-			int cheeseSize = bfs(0, 0);
+			flag = true;
+			visit = new boolean[N][M];
 			
-			if(cheeseSize == 0) {
+			dfs(0,0);	
+//			printVisit();
+
+			if(q.size() == 0) { //변화 없음, 마지막
+				//System.out.println("qsize: "+q.size());
 				break;
 			}
+
+			cnt = q.size();			
+			hour++;
 			
-			for(Location l : meltCheeseList) {
-				board[l.y][l.x] = 0; 
-			}
-			
-			remainSize = cheeseSize;
-			time++;
+			changeCheeseStatus();
+			//printMap();
+			//System.out.println("cnt: "+cnt+" hour: "+hour);
 		}
 		
-		System.out.println(time);
-		System.out.println(remainSize);
+		//findOutsideCheeses();
+		//bfs();			
+		
+		bw.write(hour+"\n"+cnt);
+		bw.close();
 	}
 	
-	public static int bfs(int y, int x) {
-		Deque<Location> queue = new ArrayDeque<>();
-		visited = new boolean[N][M];
+	static class Info{
+		int x;
+		int y;
+		int level;
 		
-		visited[y][x] = true;
-		queue.addLast(new Location(y, x));
-		
-		meltCheeseList = new ArrayList<>();
-		int cnt = 0;
-		
-		while(!queue.isEmpty()) {
-			Location cur = queue.pollFirst();
-			
-			for(int i = 0; i<  4; i++) {
-				int ny = cur.y + dy[i];
-				int nx = cur.x + dx[i];
-				
-				if(isUnreachable(ny, nx) || visited[ny][nx]) {
-					continue;
-				}
-				
-				visited[ny][nx] = true;
-				if(board[ny][nx] == 1) {
-					meltCheeseList.add(new Location(ny, nx));
-					cnt++;
-				} else {
-					queue.addLast(new Location(ny, nx));
-				}
-			}
+		public Info(int x, int y, int level) {
+			this.x = x;
+			this.y = y;
+			this.level = level;
 		}
-		
-		return cnt;
+		@Override
+		public String toString() {
+			return "info [x=" + x + ", y=" + y + ", level=" + level + "]";
+		}
 	}
-	
-	public static boolean isUnreachable(int y, int x) {
-		return y < 0 || y >= N || x < 0 || x >= M;
-	}
+
 }
