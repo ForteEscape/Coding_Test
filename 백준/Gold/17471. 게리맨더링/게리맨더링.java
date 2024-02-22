@@ -1,120 +1,239 @@
-import java.io.*;
-import java.util.*;
+import java.awt.Point;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.PriorityQueue;
+import java.util.Queue;
+import java.util.Stack;
+import java.util.StringTokenizer;
+
+import javax.print.StreamPrintService;
+
+/**
+ * 
+ */
 
 public class Main {
-	
-	static List<Integer>[] graph;
-	static int[] population;
-	static int sum;
-	static int N;
-	static int ans;
+    static BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+    static BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(System.out));
+    static StringTokenizer st;
+    static int N;
+    static int[] peopleNum; //각 구역의 인구수
+    static boolean[] visit, subset;
+    static ArrayList<Integer> G[];
+    static int totalNum = 0;
+    static int minDiff = 1000000;
+    
+    public static void printNowSet() {
+    	for(int i=1;i<=N;i++) {
+    		if(subset[i]) {
+    			System.out.print(i+" ");
+    		}
+    	}
+    	System.out.println();
+    }
+    
+    public static void checkDfs(int node, int cnt, int lastCnt, boolean[] visitTemp) {
+    	visitTemp[node] = true;
+    	//System.out.println("nowNode: "+node);
+    	if(cnt == lastCnt) {	
+    		return;
+    	}
+    	//확인
+    	for(int i=0;i<G[node].size();i++) {
+    		int nextNode = G[node].get(i);
+    		if(!visitTemp[nextNode]) {
+    			checkDfs(nextNode, cnt+1, lastCnt, visitTemp);
+    		}
+    	}
+    	//System.out.println();
+    }
+    
+    public static boolean checkIsConnect(int cnt) {
+    	int start = 0;
+    	for(int i=1;i<=N;i++) {
+    		if(!visit[i]) {
+    			start = i;
+    			break;
+    		}
+    	}
+    	
+    	boolean[] visitTemp = Arrays.copyOf(visit, N+1);
+    	checkDfs(start, 0, N-cnt, visitTemp);
+    	
+    	for(int i=1;i<=N;i++) {
+    		if(!visitTemp[i]) return false;
+    	}
+    	return true;
+    }
+    
+//    public static void dfs(int node, int sum, int cnt) {
+//    	visit[node] = true;
+//    	//System.out.println("dfs nowNode: "+node);
+//    	//if(cnt > 0) printNowSet();
+//    	if(cnt > N-1) { //영역 나누기 더 못함    		
+//    		return;
+//    	}
+//    	printNowSet();
+//    	//확인
+//    	if(cnt > 0 && checkIsConnect(cnt)) {
+//    		//System.out.println("check!");
+//    		//printNowSet();
+//    		System.out.println("cnt: "+cnt+" sum: "+sum);
+////    		sum+=peopleNum[node];
+////    		cnt++;
+//    		minDiff = Math.min(minDiff, Math.abs(sum - (totalNum-sum)));
+//    	}
+//    	
+//    	for(int i=0;i<G[node].size();i++) {
+//    		int nextNode = G[node].get(i);
+//    		if(!visit[nextNode]) {
+//    			visit[nextNode] = true;
+//    			dfs(nextNode, sum+peopleNum[nextNode], cnt+1);
+//    			visit[nextNode] = false;    			
+//    		}
+//    	}
+//    	
+//    }
+    
+    public static void dfs(int node, int cnt, boolean isSubset) {
+    	
+    	visit[node] = true;
+    	for(int i=0;i<G[node].size();i++) {
+    		int nextNode = G[node].get(i);
+    		if(!visit[nextNode] && subset[nextNode] == isSubset) {
+    			dfs(nextNode, cnt+1, isSubset);
+    		}
+    	}
+    }
+    
+    public static int findStart(boolean isSubset) {
+    	for(int i=1;i<=N;i++) {
+    		if(subset[i] == isSubset) return i;
+    	}
+    	return -1;
+    }
+    
+    public static void makeSubset(int index) {
+    	if(index == N) {
+    		Arrays.fill(visit, false);
+    		//한쪽 확인
+    		int start = findStart(true);
+    		if(start == -1) return;
+    		dfs(start, 0, true);
+    		int sum = 0;
+    		//printNowSet();
+    		for(int i=1;i<=N;i++) {
+    			if(subset[i] && visit[i]) {
+    				sum+=peopleNum[i];
+    			}
+    			if(subset[i] != visit[i]) return;
+    		}
+    		
+    		//다른쪽 확인
+    		start = findStart(false);
+    		if(start == -1) return;
+    		dfs(start, 0, false);
+    		//printNowSet();
+    		for(int i=1;i<=N;i++) {
+    			if(!subset[i] && !visit[i]) { 
+    				return;
+    			}
+    		}
+    		//System.out.println("now: "+Math.abs(sum - (totalNum-sum)));
+    		minDiff = Math.min(minDiff, Math.abs(sum - (totalNum-sum)));
+    		return;
+    	}
+    	
+    	subset[index] = true;
+    	makeSubset(index+1);
+    	subset[index] = false;
+    	makeSubset(index+1);
+    }
+    
+    public static void main(String[] args) throws Exception {
+    	
+    	N = Integer.parseInt(br.readLine());
 
-	public static void main(String[] args) throws IOException {
-		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-		N = Integer.parseInt(br.readLine());
-		
-		population = new int[N + 1];
-		graph = new List[N + 1];
-		
-		for(int i = 1; i <= N; i++) {
-			graph[i] = new ArrayList<>();
+        peopleNum = new int[N+1];
+        visit = new boolean[N+1];
+        subset = new boolean[N+1];
+        st = new StringTokenizer(br.readLine(), " ");
+        for(int i=1;i<=N;i++) {
+        	peopleNum[i] = Integer.parseInt(st.nextToken());
+        	totalNum += peopleNum[i];
+        }
+                
+        //System.out.println("totalNum: "+totalNum);
+        G = new ArrayList[N+1];        
+        for(int i=1;i<=N;i++) {
+        	G[i] = new ArrayList<>();
+        }
+        for(int i=1;i<=N;i++) {
+        	st = new StringTokenizer(br.readLine(), " ");
+        	int n = Integer.parseInt(st.nextToken());
+        	for(int j=0;j<n;j++) {
+        		int a = Integer.parseInt(st.nextToken());
+        		G[i].add(a);
+        		//G[a].add(i);
+        	}
+        }
+        
+//        for(int i=1;i<=N;i++) {
+//        	Arrays.fill(visit, false);
+//        	dfs(i,peopleNum[i],1);
+//        }
+//        dfs(1,peopleNum[1],1);
+//        dfs(1,0,0);
+        
+        makeSubset(1);
+        
+        if(minDiff == 1000000) bw.write("-1");
+        else bw.write(""+minDiff);	
+
+        bw.close();
+    }    
+
+    static class Info{
+    	int n;
+    	int cnt;
+    	int sum;
+    	
+		public Info(int n, int cnt, int sum) {
+			super();
+			this.n = n;
+			this.cnt = cnt;
+			this.sum = sum;
 		}
 		
-		StringTokenizer st = new StringTokenizer(br.readLine());
-		sum = 0;
-		for(int i = 1; i <= N; i++) {
-			population[i] = Integer.parseInt(st.nextToken());
-			sum += population[i];
+		@Override
+		public String toString() {
+			return "Info [n=" + n + ", cnt=" + cnt + ", sum=" + sum + "]";
 		}
-		
-		for(int i = 1; i <= N; i++) {
-			st = new StringTokenizer(br.readLine());
-			
-			int cnt = Integer.parseInt(st.nextToken());
-			for(int j = 0; j < cnt; j++) {
-				int to = Integer.parseInt(st.nextToken());
-				
-				graph[i].add(to);
-			}
-		}
-		
-		ans = Integer.MAX_VALUE;
-		for(int i = 1; i <= N / 2; i++) {
-			//System.out.println(i);
-			comb(1, i, new HashSet<>());
-		}
-		
-		System.out.println(ans == Integer.MAX_VALUE ? -1 : ans);
-	}
-	
-	public static void comb(int num, int r, Set<Integer> set) {
-		if(r == 0) {
-			if(set.size() == 0) return;
-			
-			int result = sum;
-			int start = -1;
-			int otherStart = -1;
-			Set<Integer> otherSet = new HashSet<>();
-			
-			for(int i = 1; i <= N; i++) {
-				if(set.contains(i)) {
-					start = i;
-					result -= population[i];
-				} else {
-					otherSet.add(i);
-					otherStart = i;
-				}
-			}
-			
-			if(bfs(start, set) && bfs(otherStart, otherSet)) {
-//				System.out.println(set.toString());
-//				System.out.println(otherSet.toString());
-//				System.out.println(result + " " + sum);
-				ans = Math.min(ans, Math.abs((sum - result) - result));
-			}
-			
-			return;
-		}
-		
-		if(num > N) {
-			return;
-		}
-		
-		//System.out.println(r);
-		
-		set.add(num);
-		comb(num + 1, r - 1, set);
-		set.remove(num);
-		comb(num + 1, r, set);
-	}
-	
-	public static boolean bfs(int startNode, Set<Integer> set) {
-		Deque<Integer> queue = new ArrayDeque<>();
-		queue.addLast(startNode);
-		
-		boolean[] visited = new boolean[N + 1];
-		visited[startNode] = true;
-		
-		Set<Integer> reachableSet = new HashSet<>();
-		reachableSet.add(startNode);
-		
-		while(!queue.isEmpty()) {
-			int cur = queue.pollFirst();
-			
-			for(int adjNode : graph[cur]) {
-				if(!visited[adjNode] && set.contains(adjNode)) {
-					visited[adjNode] = true;
-					queue.addLast(adjNode);
-					reachableSet.add(adjNode);
-				}
-			}
-		}
-		if(set.size() == reachableSet.size()) {
-//			System.out.println("start : " + startNode);
-//			System.out.println("set : " + set.toString());
-//			System.out.println("reach : " + reachableSet.toString());
-			return true;
-		}
-		return false;
-	}
+    }
+
 }
+
+/**
+9
+1 2 3 4 5 6 7 8 9
+2 2 4
+4 1 3 5 4
+4 2 5 8 7
+4 6 9 1 2
+2 2 3
+1 4
+1 3
+1 3
+1 4
+답: 1(3, 5, 7, 8 / 1, 2, 4, 6, 9)
+*/
