@@ -22,7 +22,6 @@ typedef struct Node {
 
 int N, R; //노드 개수, 루트 번호
 vector<vector<Node>> G;
-vector<int> in, out;
 vector<bool> visit;
 int rootLength = 0, gigaLenght = 0;
 
@@ -35,19 +34,12 @@ int findGiga(int nowNode, int length, int cnt) { //root에서부터 탐색 시�
 	}
 
 	visit[nowNode] = true;
-	
-	if (nowNode == R) { //맨 앞이 루트면서 기가인 경우
-		int nodeCnt = 0;
-		for (int i = 0; i < G[nowNode].size(); i++) {
-			if (nodeCnt > 0) {
-				visit[nowNode] = false;
-				return nowNode;
-			}
-			if (!visit[G[nowNode][i].n]) {
-				nodeCnt++;
-			}
-		}
+
+	if (nowNode == R && G[nowNode].size() > 1) {//맨 앞이 루트면서 기가인 경우
+		visit[nowNode] = false;
+		return nowNode;
 	}
+
 
 	for (int i = 0; i < G[nowNode].size(); i++) {
 		int nextNode = G[nowNode][i].n;
@@ -59,9 +51,7 @@ int findGiga(int nowNode, int length, int cnt) { //root에서부터 탐색 시�
 }
 
 void dfs(int nowNode, int length) {
-	//printf("nowNode: %d\n", nowNode);
 	if (G[nowNode].size() < 2) { //마지막 노드
-		//printf("last node: %d\n", nowNode);
 		gigaLenght = max(length, gigaLenght);
 		return;
 	}
@@ -71,7 +61,6 @@ void dfs(int nowNode, int length) {
 	for (int i = 0; i < G[nowNode].size(); i++) {
 		int nextNode = G[nowNode][i].n;
 		int nextWeight = G[nowNode][i].weight;
-		//printf("nextNode: %d\n", nextNode);
 		if (!visit[nextNode]) {
 			dfs(nextNode, length + nextWeight);
 		}
@@ -84,8 +73,6 @@ int main()
 	scanf("%d %d", &N, &R);
 
 	G = vector<vector<Node>>(N + 1, vector<Node>());
-	//in = vector<int>(N + 1, 0);
-	//out = vector<int>(N + 1, 0);
 	visit = vector<bool>(N + 1, false);
 
 	for (int i = 0; i < N - 1; i++) {
