@@ -1,171 +1,179 @@
-import java.io.*;
-import java.util.*;
+import java.awt.Point;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.PriorityQueue;
+import java.util.Queue;
+import java.util.Stack;
+import java.util.StringTokenizer;
+
+import javax.print.StreamPrintService;
+
+/**
+ * 매 시간마다 물 bfs로 확장, 고슴도치 bfs로 이동
+ */
 
 public class Main {
-	
-	static class Location {
-		int y;
-		int x;
-		int time;
-		
-		Location(int y, int x, int time) {
-			this.y = y;
+    static BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+    static BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(System.out));
+    static StringTokenizer st;
+    static int N, M;
+    static char[][] map;
+    static Point start, end;
+    static Queue<Info> water = new LinkedList<>();
+    static int[] dx = {0,0,-1,1};
+    static int[] dy = {-1,1,0,0};
+    static boolean isDone = false;
+    static int minTime = 0;
+    static int beforeTime = 0;
+    
+    public static void printMap() {
+    	for(int i=0;i<N;i++) {
+    		for(int j=0;j<M;j++) {
+    			System.out.print(map[i][j]);
+    		}
+    		System.out.println();
+    	}
+    	System.out.println();
+    }
+    
+    public static void floodWater() {
+    	while(!water.isEmpty() && water.peek().time == beforeTime) {
+    		int x = water.peek().x;
+    		int y = water.peek().y;
+    		int time = water.peek().time;
+    		water.poll();
+    		
+    		for(int i=0;i<4;i++) {
+    			int nx = x+dx[i];
+    			int ny = y+dy[i];
+    			if(nx>=0 && nx<N && ny>=0 && ny<M) {
+    				if(map[nx][ny] =='.') {
+    					map[nx][ny] = '*';
+    					water.offer(new Info(nx,ny,time+1));
+    				}
+    			}
+    		}
+    	}
+    }
+    
+    public static void move() {
+    	PriorityQueue<Info> pq = new PriorityQueue<>();
+    	pq.offer(new Info(start.x, start.y, 0));
+    	
+    	while(!pq.isEmpty()) {
+    		int x = pq.peek().x;
+    		int y = pq.peek().y;
+    		int time = pq.peek().time;
+    		//System.out.println("x: "+x+" y: "+y+" time: "+time);
+
+    		if(x==end.x && y==end.y) {
+    			isDone = true;
+    			return;
+    		}
+    		if(time != beforeTime) { //시간 1초 지남
+    			//System.out.println("nowTime: "+time+" beforeTime: "+beforeTime);
+    			floodWater();
+    			minTime++;
+    			beforeTime = time;
+    		}	
+    		pq.poll();
+    		if(map[x][y] != '.' && map[x][y] != 'S') continue;
+    		map[x][y] = 'o';
+
+    		//printMap();
+    		for(int i=0;i<4;i++) {
+    			int nx = x+dx[i];
+    			int ny = y+dy[i];
+    			
+    			if(nx>=0 && nx<N && ny>=0 && ny<M) {
+    				if(map[nx][ny] == '.') {
+    					pq.offer(new Info(nx,ny,time+1));
+    				}
+    				else if(map[nx][ny] == 'D') {
+    					minTime++;
+    					isDone = true;
+    					return;
+    				}
+    			}
+    		}
+    	}
+    }
+
+    public static void main(String[] args) throws Exception {
+    	
+    	st = new StringTokenizer(br.readLine(), " ");
+    	N = Integer.parseInt(st.nextToken());
+    	M = Integer.parseInt(st.nextToken());
+    	
+    	map = new char[N][M];
+    	
+    	for(int i=0;i<N;i++) {
+    		String s = br.readLine();
+    		for(int j=0;j<M;j++) {
+    			map[i][j] = s.charAt(j);
+    			if(map[i][j] == 'S') {
+    				start = new Point(i,j);
+    			}
+    			else if(map[i][j] == 'D') {
+    				end = new Point(i,j);    				
+    			}
+    			else if(map[i][j] == '*') {
+    				water.offer(new Info(i,j,0));
+    			}
+    		}
+    	}
+
+    	move();
+        
+    	if(!isDone) bw.write("KAKTUS");
+    	else bw.write(minTime+"");	
+
+        bw.close();
+    }    
+
+
+    static class Info implements Comparable<Info>{
+    	int x;
+    	int y;
+    	int time;
+    	
+		public Info(int x, int y, int time) {
+			super();
 			this.x = x;
+			this.y = y;
 			this.time = time;
 		}
-	}
 
-	static int N, M;
-	static char[][] board;
-	static boolean[][] visited;
-	static int[] dy = {-1, 0, 1, 0};
-	static int[] dx = {0, 1, 0, -1};
-	static Deque<Location> queue;
-	static Deque<Location> waterQueue;
-	static Location goal;
- 
-	public static void main(String[] args) throws IOException {
-		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-		StringTokenizer st = new StringTokenizer(br.readLine());
-		
-		N = Integer.parseInt(st.nextToken());
-		M = Integer.parseInt(st.nextToken());
-		
-		board = new char[N][M];
-		Location player = null;
-		queue = new ArrayDeque<>();
-		waterQueue = new ArrayDeque<>();
-		visited = new boolean[N][M];
-		goal = null;
-		
-		for(int i = 0; i < N; i++) {
-			String line = br.readLine();
-			for(int j = 0; j < M; j++) {
-				board[i][j] = line.charAt(j);
-				
-				if(board[i][j] == 'S') {
-					player = new Location(i, j, 0);
-					queue.addLast(player);
-					visited[i][j] = true;
-				}
-				
-				if(board[i][j] == '*') {
-					waterQueue.addLast(new Location(i, j, 0));
-					visited[i][j] = true;
-				}
-				
-				if(board[i][j] == 'D') {
-					goal = new Location(i, j, 0);
-				}
-			}
+		@Override
+		public int compareTo(Info o) {
+			// TODO Auto-generated method stub
+			return this.time - o.time;
 		}
-		
-		while(true) {
-			int result = bfs();
-			if(result== -1) {
-				System.out.println("KAKTUS");
-				break;
-			}
-			
-			if(result != 0) {
-				System.out.println(result);
-				break;
-			}
-			
-			//print();
-		}
-	}
-	
-//	public static void print() {
-//		for(int i = 0; i<  N; i++) {
-//			for(int j = 0; j< M; j++) {
-//				System.out.print(board[i][j] + " ");
-//			}
-//			System.out.println();
-//		}
-//		System.out.println("======");
-//	}
-	
-	public static int bfs() {
-		if(queue.isEmpty()) {
-			return -1;
-		}
-		
-		// biber
-		int size = queue.size();
-		for(int i = 0; i < size; i++) {
-			Location cur = queue.pollFirst();
-			
-			if(cur.y == goal.y && cur.x == goal.x) {
-				return cur.time;
-			}
-			
-			for(int dir = 0; dir < 4; dir++) {
-				int ny = cur.y + dy[dir];
-				int nx = cur.x + dx[dir];
-				
-				if(isUnreachable(ny, nx) || visited[ny][nx] || board[ny][nx] == '*' || board[ny][nx] == 'X' || !isSafe(ny, nx)) {
-					continue;
-				}
-				
-				board[ny][nx] = 'S';
-				visited[ny][nx] = true;
-				queue.addLast(new Location(ny, nx, cur.time + 1));
-			}
-		}
-		
-		// water
-		int waterSize = waterQueue.size();
-		for(int i = 0; i < waterSize; i++) {
-			Location water = waterQueue.pollFirst();
-			
-			for(int dir = 0; dir < 4; dir++) {
-				int ny = water.y + dy[dir];
-				int nx = water.x + dx[dir];
-				
-				if(isUnreachable(ny, nx) || board[ny][nx] == 'D' || board[ny][nx] == 'X') {
-					continue;
-				}
-				
-				if(board[ny][nx] == 'S') {
-					board[ny][nx] = '*';
-					waterQueue.addLast(new Location(ny, nx, 0));
-					continue;
-				}
-				
-				if(visited[ny][nx]) {
-					continue;
-				}
-				
-				board[ny][nx] = '*';
-				visited[ny][nx] = true;
-				waterQueue.addLast(new Location(ny, nx, 0));
-			}
-		}
-		
-		return 0;
-	}
-	
-	public static boolean isUnreachable(int y, int x) {
-		return y < 0 || y >= N || x < 0 || x >= M;
-	}
-	
-	public static boolean isSafe(int y, int x) {
-		if(board[y][x] == 'D') return true;
-		
-		for(int i = 0; i < 4; i++) {
-			int ny = y + dy[i];
-			int nx = x + dx[i];
-			
-			if(isUnreachable(ny, nx)) {
-				continue;
-			}
-			
-			if(board[ny][nx] == '*') {
-				return false;
-			}
-		}
-		
-		return true;
-	}
+    	
+    }
 }
+
+/**
+9
+1 2 3 4 5 6 7 8 9
+2 2 4
+4 1 3 5 4
+4 2 5 8 7
+4 6 9 1 2
+2 2 3
+1 4
+1 3
+1 3
+1 4
+답: 1(3, 5, 7, 8 / 1, 2, 4, 6, 9)
+*/
