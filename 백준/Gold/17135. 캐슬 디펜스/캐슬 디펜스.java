@@ -1,158 +1,140 @@
+import java.awt.Point;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayDeque;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
-import java.util.Deque;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.PriorityQueue;
+import java.util.Queue;
+import java.util.Set;
+import java.util.Stack;
 import java.util.StringTokenizer;
 
+import javax.print.StreamPrintService;
+
+/**
+ * 궁수는 맨 밑에 3명 배치 가능함
+ * 궁수 배치 조합에 따라 게임 결과 달라짐 -> 이때 제거 가능한 최대 수
+ * 궁수가 공격하는 적은 가장 가까운 적, 같은 거리일 때 왼쪽 적 공격
+ */
+
+/**
+ * 궁수 조합하기 -> dfs
+ * 궁수 3명 배치 완료되면 게임 진행 (게임은 map copy해서 진행)
+ * 	게임에서 궁수가 제거할 적: 가장 가까이 있는 적 -> 15*15 다 해보고 최소값 가지는 적으로 제거
+ */
+
 public class Main {
-	
-	static class Location {
-		int y;
-		int x;
-		int dist;
-		
-		Location(int y, int x) {
-			this.y = y;
-			this.x = x;
-			this.dist = 0;
-		}
-		
-		Location(int y, int x, int dist) {
-			this.y = y;
-			this.x = x;
-			this.dist = dist;
-		}
-	}
-	static int[][] board;
-	static int[][] simulation;
-	static int[] dy = {0, -1, 0, 1};
-	static int[] dx = {-1, 0, 1, 0};
-	static boolean[][] visited;
-	static int N, M, D;
-	static List<Location> locationList;
-	static int ans;
-	
-    public static void main(String[] args) throws IOException {
-        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        StringTokenizer st = new StringTokenizer(br.readLine());
-        
+	static BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+    static BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(System.out));
+    static StringTokenizer st;
+    static int N,M,D;
+    static int[][] map;
+    static int[][] gameMap;
+    static int[] archer = new int[3];
+    static int maxNum = 0;
+    static boolean[][] visit;
+    
+    public static Point findNear(int x, int y, int nowN) { //궁수 위치, 현재 맨 끝
+    	int minDist = 987654321;
+    	Point e = new Point(16,16);
+    	for(int i=nowN;i>=0;i--) {
+    		for(int j=0;j<M;j++) { //같은 거리면 왼쪽
+    			if(gameMap[i][j] == 0) continue;
+    			int nowDist = Math.abs(x-i)+Math.abs(y-j);
+    			if(nowDist > D) continue;
+    			if(minDist > nowDist) {
+    				minDist = nowDist;
+    				e.x = i;
+    				e.y = j;
+    			}
+    			else if(minDist == nowDist) {
+    				if(e.y > j) {
+    					e.x = i;
+        				e.y = j;
+    				}
+    			}
+    		}
+    	}
+    	return e;
+    }
+    
+    public static int playGame() {
+    	int cnt = 0;
+    	Point[] eList = new Point[3];
+    	int eIndex = 0;
+    	for(int i=N-1;i>=0;i--) { //한 칸씩 올라감
+    		eList = new Point[3];
+    		eIndex = 0;
+    		for(int j=0;j<3;j++) {
+    			Point e = findNear(i+1, archer[j], i);
+    			if(e.x == 16 && e.y == 16) continue; //D 안에 제거 가능한 적 없음
+    			eList[eIndex] = new Point(e.x, e.y);
+    			eIndex++;
+    		}
+        	for(int j=0;j<eIndex;j++) {
+        		if(gameMap[eList[j].x][eList[j].y] == 1) {
+        			gameMap[eList[j].x][eList[j].y] = 0; 
+        			cnt++;
+        		}
+        	}
+    	}
+    	
+    	return cnt;
+    }
+
+    public static void makePer(int index, int cnt) {
+    	if(cnt == 3) { //게임 진행
+    		gameMap = new int[N][M];
+    		for(int i=0;i<N;i++) {
+    			for(int j=0;j<M;j++) {
+    				gameMap[i][j] = map[i][j];
+    			}
+    		}
+    		
+    		int nowNum = playGame();
+    		maxNum = Math.max(nowNum, maxNum);
+    		
+    		return;
+    	}
+    	
+    	for(int i=index;i<M;i++) {
+    		archer[cnt] = i;
+    		makePer(i+1, cnt+1);
+    	}
+    	
+    }
+    public static void main(String[] args) throws Exception {
+    	st = new StringTokenizer(br.readLine(), " ");
         N = Integer.parseInt(st.nextToken());
         M = Integer.parseInt(st.nextToken());
         D = Integer.parseInt(st.nextToken());
+        map = new int[N][M];
+        visit = new boolean[N][M];
         
-        board = new int[N][M];
-        locationList = new ArrayList<>();
-        simulation = new int[N][M];
-        
-        for(int i = 0; i < N; i++) {
-        	st = new StringTokenizer(br.readLine());
-        	for(int j = 0; j < M; j++) {
-        		board[i][j] = Integer.parseInt(st.nextToken());
+        for(int i=0;i<N;i++) {
+        	st = new StringTokenizer(br.readLine(), " ");
+        	for(int j=0;j<M;j++) {
+        		map[i][j] = Integer.parseInt(st.nextToken());
         	}
         }
         
-        ans = Integer.MIN_VALUE;
-        for(int i = 0; i < M - 2; i++) {
-        	for(int j = i + 1; j < M - 1; j++) {
-        		for(int k = j + 1; k < M; k++) {
-        			
-        			chk(i, j, k);
-        		}
-        	}
-        }
+        makePer(0,0);
         
-        System.out.println(ans);
-    }
-    
-    public static void init() {
-    	for(int i = 0; i < N; i++) {
-    		for(int j = 0; j < M; j++) {
-    			simulation[i][j] = board[i][j];
-    		}
-     	}
-    }
-    
-    public static void chk(int first, int second, int third) {
-    	init();
-    	int result = 0;
-    	int cnt = 0;
-    	
-    	Location firstLocation = new Location(N, first);
-    	Location secondLocation = new Location(N, second);
-    	Location thirdLocation = new Location(N, third);
-    	
-    	while(cnt < N) {
-    		Location enemyFirst = bfs(firstLocation);
-        	Location enemySecond = bfs(secondLocation);
-        	Location enemyThird = bfs(thirdLocation);
-        	
-        	
-        	if(enemyFirst != null && simulation[enemyFirst.y][enemyFirst.x] == 1) {
-        		simulation[enemyFirst.y][enemyFirst.x] = 0;
-        		result++;
-        	}
-        	
-        	if(enemySecond != null && simulation[enemySecond.y][enemySecond.x] == 1) {
-        		simulation[enemySecond.y][enemySecond.x] = 0;
-        		result++;
-        	}
-        	
-        	if(enemyThird != null && simulation[enemyThird.y][enemyThird.x] == 1) {
-        		simulation[enemyThird.y][enemyThird.x] = 0;
-        		result++;
-        	}
-        	
-        	ans = Math.max(ans, result);
-        	movement();
-        	cnt++;
-    	}
-    }
-    
-    public static void movement() {
-    	for(int i = N - 1; i > 0; i--) {
-    		for(int j = 0; j < M; j++) {
-    			simulation[i][j] = simulation[i - 1][j];
-    		}
-    	}
-    	
-    	for(int i = 0; i < M; i++) {
-    		simulation[0][i] = 0;
-    	}
-    }
-    
-    public static Location bfs(Location location) {
-    	visited = new boolean[N][M];
-    	Deque<Location> queue = new ArrayDeque<>();
-    	queue.addLast(location);
-    	int idx = 1;
-    	
-    	while(!queue.isEmpty()) {
-    		Location cur = queue.pollFirst();
-    		
-    		if(cur.dist > D) {
-    			break;
-    		}
-    		
-    		for(int j = 0; j < 4; j++) {
-    			int ny = cur.y + dy[j];
-    			int nx = cur.x + dx[j];
-    			
-    			if(ny < 0 || ny >= N || nx < 0 || nx >= M || visited[ny][nx]) {
-    				continue;
-    			}
-    			
-    			if(simulation[ny][nx] == 1 && cur.dist + 1 <= D) {
-        			return new Location(ny, nx);
-        		}
-    			
-    			visited[ny][nx] = true;
-    			queue.addLast(new Location(ny, nx, cur.dist + 1));
-    		}
-    	}
-    	
-    	return null;
-    }
+        bw.write(""+maxNum);	
+
+        bw.close();
+    }    
+
 }
+
+/**
+*/
