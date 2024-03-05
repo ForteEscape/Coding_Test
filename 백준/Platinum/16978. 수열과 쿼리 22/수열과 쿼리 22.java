@@ -2,11 +2,45 @@ import java.util.*;
 import java.io.*;
 
 public class Main {
+
+	static class ChangeQuery {
+		int changeIdx;
+		int value;
+
+		ChangeQuery(int changeIdx, int value) {
+			this.changeIdx = changeIdx;
+			this.value = value;
+		}
+	}
+
+	static class SumQuery implements Comparable<SumQuery> {
+		int idx;
+		int changeQueryIdx;
+		int left;
+		int right;
+
+		SumQuery(int idx, int changeQueryIdx, int left, int right) {
+			this.idx = idx;
+			this.changeQueryIdx = changeQueryIdx;
+			this.left = left;
+			this.right = right;
+		}
+
+		@Override
+		public int compareTo(SumQuery o) {
+			if (this.changeQueryIdx < o.changeQueryIdx) {
+				return -1;
+			} else {
+				return 1;
+			}
+		}
+	}
+
 	static int N, Q;
 	static int[] arr;
 	static long[] tree;
-	static List<int[]> query2;
-	static List<int[]> query1;
+	static List<SumQuery> query;
+	static List<ChangeQuery> changeQueryList;
 
 	public static void main(String[] args) throws Exception {
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
@@ -16,10 +50,10 @@ public class Main {
 
 		arr = new int[N + 1];
 		tree = new long[4 * N];
-		query2 = new ArrayList<>();
-		query1 = new ArrayList<>();
+		query = new ArrayList<>();
+		changeQueryList = new ArrayList<>();
 
-		query1.add(new int[2]);
+		changeQueryList.add(new ChangeQuery(0, 0));
 
 		st = new StringTokenizer(br.readLine());
 		for (int i = 1; i <= N; i++) {
@@ -40,36 +74,37 @@ public class Main {
 				int idx = Integer.parseInt(st.nextToken());
 				int val = Integer.parseInt(st.nextToken());
 
-				query1.add(new int[] {idx, val});
+				changeQueryList.add(new ChangeQuery(idx, val));
 			} else {
 				int changeQueryIdx = Integer.parseInt(st.nextToken());
 				int left = Integer.parseInt(st.nextToken());
 				int right = Integer.parseInt(st.nextToken());
 
-				query2.add(new int[] {queryCnt, changeQueryIdx, left, right});
+				query.add(new SumQuery(queryCnt, changeQueryIdx, left, right));
 				queryCnt++;
 			}
 		}
 
-		Collections.sort(query2, Comparator.comparingInt(o -> o[1]));
-		
+		Collections.sort(query);
+		// System.out.println(query.toString());
+
 		long[] result = new long[queryCnt];
 //		System.out.println(query.toString());
 
 		int index = 0;
-		for (int i = 0; i < query1.size(); i++) {
+		for (int i = 0; i < changeQueryList.size(); i++) {
 			if (i > 0) {
-				int idx = query1.get(i)[0];
-				int val = query1.get(i)[1];
+				int idx = changeQueryList.get(i).changeIdx;
+				int val = changeQueryList.get(i).value;
 
 				update(1, 1, N, idx, val - arr[idx]);
 				arr[idx] = val;
 			}
 
-			while (index < query2.size() && query2.get(index)[1] == i) {
-				int left = query2.get(index)[2];
-				int right = query2.get(index)[3];
-				int idx = query2.get(index)[0];
+			while (index < query.size() && query.get(index).changeQueryIdx == i) {
+				int left = query.get(index).left;
+				int right = query.get(index).right;
+				int idx = query.get(index).idx;
 
 				result[idx] = getSum(1, 1, N, left, right);
 				index++;
