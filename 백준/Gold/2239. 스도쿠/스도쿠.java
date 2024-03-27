@@ -43,11 +43,13 @@ public class Main {
 		for (int i = 0; i < 9; i++) {
 			String line = br.readLine();
 			for (int j = 0; j < 9; j++) {
-				if (line.charAt(j) - '0' != 0) {
-					board[i][j] = line.charAt(j) - '0';
-					row[i].add(line.charAt(j) - '0');
-					col[j].add(line.charAt(j) - '0');
-					area[i / 3][j / 3].add(line.charAt(j) - '0');
+				int element = line.charAt(j) - '0';
+				
+				if (element != 0) {
+					board[i][j] = element;
+					row[i].add(element);
+					col[j].add(element);
+					area[i / 3][j / 3].add(element);
 				} else {
 					undeterminPair.add(new Pair(i, j));
 				}
@@ -89,8 +91,8 @@ public class Main {
 	}
 
 	static boolean isAddable(int x, Pair currentPair) {
-		return !row[currentPair.y].contains(x) && !col[currentPair.x].contains(x)
-				&& !area[currentPair.y / 3][currentPair.x / 3].contains(x);
+		return !(row[currentPair.y].contains(x) || col[currentPair.x].contains(x)
+				|| area[currentPair.y / 3][currentPair.x / 3].contains(x));
 	}
-	
+
 }
