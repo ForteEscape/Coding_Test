@@ -1,101 +1,104 @@
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.util.*;
-
-class Location{
-    int x;
-    int y;
-    int z;
-
-    Location(int x, int y, int z){
-        this.x = x;
-        this.y = y;
-        this.z = z;
-    }
-}
+import java.io.*;
 
 public class Main {
-    public static void main(String[] args) throws Exception{
+    
+    static class Location {
+        int y;
+        int x;
+        int cnt;
+        int status;
+        
+        Location(int y, int x) {
+            this.y = y;
+            this.x = x;
+        }
+        
+        Location(int y, int x, int cnt, int status) {
+            this(y, x);
+            this.cnt = cnt;
+            this.status = status;
+        }
+    }
+    
+    public static int[][] board;
+    public static int[] dy = {-1, 0, 1, 0};
+    public static int[] dx = {0, 1, 0, -1};
+    public static int N, M, T;
+    public static Location gram;
+    public static boolean[][][] visited;
+    
+    public static void main(String[] args) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(System.out));
-
-        String line = br.readLine();
-        StringTokenizer st = new StringTokenizer(line);
-
-        int N = Integer.parseInt(st.nextToken());
-        int M = Integer.parseInt(st.nextToken());
-        int T = Integer.parseInt(st.nextToken());
-        int[] dx = {0, 0, 1, -1};
-        int[] dy = {1, -1, 0, 0};
-
-        int[][][] board = new int[2][N + 1][M + 1];
-
-        for(int i = 0; i<N; i++){
+        StringTokenizer st = new StringTokenizer(br.readLine());
+        
+        N = Integer.parseInt(st.nextToken());
+        M = Integer.parseInt(st.nextToken());
+        T = Integer.parseInt(st.nextToken());
+        
+        board = new int[N][M];
+        
+        for(int i = 0; i < N; i++) {
             st = new StringTokenizer(br.readLine());
-            for(int j = 0; j<M; j++){
-                int status = Integer.parseInt(st.nextToken());
-                board[0][i][j] = status;
-                board[1][i][j] = status;
+            for(int j = 0; j < M; j++) {
+                board[i][j] = Integer.parseInt(st.nextToken());
+                
+                if(board[i][j] == 2) {
+                    gram = new Location(i, j);
+                }
             }
         }
-
+        
+        int time = bfs(0, 0);
+        
+        if(time > T) {
+            System.out.println("Fail");
+        } else {
+            System.out.println(time);   
+        }
+    }
+    
+    public static int bfs(int y, int x) {
+        visited = new boolean[2][N][M];
         Deque<Location> queue = new ArrayDeque<>();
-        boolean[][][] visited = new boolean[2][N + 1][M + 1];
-        int ans = -1;
-
-        queue.add(new Location(0, 0, 0));
-        visited[0][0][0] = true;
-
-        while(!queue.isEmpty()){
-            Location location = queue.pop();
-
-            int y = location.y;
-            int x = location.x;
-            int sword = location.z;
-
-            if(y == N - 1 && x == M - 1){
-                ans = board[sword][y][x];
-                break;
+        
+        visited[0][y][x] = true;
+        queue.addLast(new Location(y, x, 0, 0));
+        
+        int ans = Integer.MAX_VALUE;
+        
+        while(!queue.isEmpty()) {
+            Location cur = queue.pollFirst();
+            
+            if(cur.y == N - 1 && cur.x == M - 1) {
+                ans = Math.min(ans, cur.cnt);
             }
-
-            for(int i = 0; i<4; i++){
-                int ny = y + dy[i];
-                int nx = x + dx[i];
-
-                if(ny < 0 || ny >= N || nx < 0 || nx >= M){
+            
+            if(cur.status == 0 && cur.y == gram.y && cur.x == gram.x) {
+                cur.status = 1;
+            }
+            
+            for(int i = 0; i < 4; i++) {
+                int ny = cur.y + dy[i];
+                int nx = cur.x + dx[i];
+                
+                if(isValid(ny, nx) || visited[cur.status][ny][nx]) {
                     continue;
                 }
-
-                if(sword == 0 && !visited[sword][ny][nx] && board[sword][ny][nx] != 1){
-                    visited[sword][ny][nx] = true;
-
-                    if(board[sword][ny][nx] == 2){
-                        board[sword + 1][ny][nx] = board[sword][y][x] + 1;
-                        visited[sword + 1][ny][nx] = true;
-                        queue.add(new Location(nx, ny, sword + 1));
-                    }
-                    else{
-                        board[sword][ny][nx] = board[sword][y][x] + 1;
-                        queue.add(new Location(nx, ny, sword));
-                    }
+                
+                if(cur.status == 0 && board[ny][nx] == 1) {
+                    continue;
                 }
-                else if(sword == 1 && !visited[sword][ny][nx]){
-                    visited[sword][ny][nx] = true;
-                    board[sword][ny][nx] = board[sword][y][x] + 1;
-                    queue.add(new Location(nx,ny, sword));
-                }
+                
+                visited[cur.status][ny][nx] = true;
+                queue.addLast(new Location(ny, nx, cur.cnt + 1, cur.status));
             }
         }
-
-        if(ans > 0 && ans <= T){
-            bw.write(String.valueOf(ans));
-            bw.newLine();
-        }
-        else{
-            bw.write("Fail\n");
-        }
-        bw.flush();
+        
+        return ans;
+    }
+    
+    private static boolean isValid(int y, int x) {
+        return y < 0 || y >= N || x < 0 || x >= M;
     }
 }
